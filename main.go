@@ -40,6 +40,11 @@ const (
 `
 )
 
+var (
+	flagEmailSubject string = defaultEmailContent
+	flagEmailContent string = defaultEmailContent
+)
+
 func init() {
 
 	// command-line flags and env variables
@@ -48,6 +53,10 @@ func init() {
 	flag.StringVar(&flagSendgridApiKey, "sendgrid-api-key", util.LookupEnvOrString("SENDGRID_API_KEY", flagSendgridApiKey), "Your sendgrid api key.")
 	flag.StringVar(&flagEmailFrom, "email-from", util.LookupEnvOrString("EMAIL_FROM_ADDRESS", flagEmailFrom), "'From' email address.")
 	flag.StringVar(&flagEmailFromName, "email-from-name", util.LookupEnvOrString("EMAIL_FROM_NAME", flagEmailFromName), "'From' email name.")
+	//support email subject & content
+	flag.StringVar(&flagEmailSubject, "email-subject", util.LookupEnvOrString("EMAIL_SUBJECT", flagEmailSubject), "Email subject.")
+	flag.StringVar(&flagEmailContent, "email-content", util.LookupEnvOrString("EMAIL_CONTENT", flagEmailContent), "Email content.")
+
 	flag.StringVar(&flagSessionSecret, "session-secret", util.LookupEnvOrString("SESSION_SECRET", flagSessionSecret), "The key used to encrypt session cookies.")
 	flag.Parse()
 
@@ -57,6 +66,10 @@ func init() {
 	util.SendgridApiKey = flagSendgridApiKey
 	util.EmailFrom = flagEmailFrom
 	util.EmailFromName = flagEmailFromName
+
+	util.EmailSubject = flagEmailSubject
+	util.EmailContent = flagEmailContent
+
 	util.SessionSecret = []byte(flagSessionSecret)
 
 	// print app information
@@ -109,7 +122,7 @@ func main() {
 	app.GET("/logout", handler.Logout(), handler.ValidSession)
 	app.POST("/new-client", handler.NewClient(db), handler.ValidSession)
 	app.POST("/update-client", handler.UpdateClient(db), handler.ValidSession)
-	app.POST("/email-client", handler.EmailClient(db, sendmail, defaultEmailSubject, defaultEmailContent), handler.ValidSession)
+	app.POST("/email-client", handler.EmailClient(db, sendmail, util.EmailSubject, util.EmailContent), handler.ValidSession)
 	app.POST("/client/set-status", handler.SetClientStatus(db), handler.ValidSession)
 	app.POST("/remove-client", handler.RemoveClient(db), handler.ValidSession)
 	app.GET("/download", handler.DownloadClient(db), handler.ValidSession)
